@@ -1,45 +1,35 @@
-pipeline {
+pipeline{
     agent any
 
-    stages {
-        stage('Checkout Code') {
-            steps {
+    tools {
+        maven 'maven3'
+    }
+
+    stages{
+        stage('Checkout code'){
+            steps{
                 checkout scm
             }
         }
 
-        stage('Build Java Application') {
-            steps {
+        stage('Build java application'){
+            steps{
                 sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t springappforjenkins:v9 .'
+        stage('Build docker image'){
+            steps{
+                sh 'docker build -t digitalcollins/my-java-app:v1 .'
             }
         }
 
-        stage('Push Docker Image') {
-            steps {
-                // Use credentials for Docker login (username and password)
-                withCredentials([usernamePassword(credentialsId: 'DOCKER_LOGIN', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                    sh """
-                        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-                        docker push springappforjenkins:v9
-                    """
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            echo 'Pipeline completed!'
-        }
-
-        failure {
-            echo 'Build or deployment failed.'
+        stage('Push docker image'){
+            steps{
+               withCredentials([string(credentialsId: 'DOCKER_LOGIN', url: "")]) {
+                    sh 'docker push digitalcollins/my-java-app:v1'
+               }
+               }
         }
     }
 }
