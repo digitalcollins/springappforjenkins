@@ -22,9 +22,10 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                withCredentials([string(credentialsId: 'DOCKER_LOGIN', variable: 'DOCKER_TOKEN')]) {
+                // Use credentials for Docker login (username and password)
+                withCredentials([usernamePassword(credentialsId: 'DOCKER_LOGIN', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                     sh """
-                        echo $DOCKER_TOKEN | docker login -u your-docker-username --password-stdin
+                        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
                         docker push tech365/my-java-app:v9
                     """
                 }
