@@ -1,35 +1,17 @@
-pipeline{
-    agent any
-
-    tools {
-        maven 'maven3'
-    }
-
-    stages{
-        stage('Checkout code'){
-            steps{
-                checkout scm
+stage('Push docker image') {
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'DOCKER_LOGIN', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+            script {
+                // Login to Docker using the credentials
+                sh '''
+                    echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
+                '''
+                
+                // Push the image to Docker registry
+                sh '''
+                    docker push digitalcollins/my-java-app:v1
+                '''
             }
-        }
-
-        stage('Build java application'){
-            steps{
-                sh 'mvn clean package -DskipTests'
-            }
-        }
-
-        stage('Build docker image'){
-            steps{
-                sh 'docker build -t digitalcollins/my-java-app:v1 .'
-            }
-        }
-
-        stage('Push docker image'){
-            steps{
-               withCredentials([string(credentialsId: 'DOCKER_LOGIN', url: "")]) {
-                    sh 'docker push digitalcollins/my-java-app:v1'
-               }
-               }
         }
     }
 }
