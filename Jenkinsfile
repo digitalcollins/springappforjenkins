@@ -1,15 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'maven3'
-    }
-
-    environment {
-        DOCKER_IMAGE = 'tech365/my-java-app'
-        TAG = "v${env.BUILD_NUMBER}"
-    }
-
     stages {
         stage('Checkout Code') {
             steps {
@@ -25,23 +16,27 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${DOCKER_IMAGE}:${TAG} .'
+                sh 'docker build -t tech365/my-java-app:v9 .'
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                withCredentials([string(credentialsId: 'DOCKER_LOGIN')]) {
-                    sh 'docker push ${DOCKER_IMAGE}:${TAG}'
+                withCredentials([string(credentialsId: 'DOCKER_LOGIN', variable: 'DOCKER_TOKEN')]) {
+                    sh """
+                        echo $DOCKER_TOKEN | docker login -u your-docker-username --password-stdin
+                        docker push tech365/my-java-app:v9
+                    """
                 }
             }
         }
     }
 
     post {
-        success {
-            echo 'Build and deployment succeeded!'
+        always {
+            echo 'Pipeline completed!'
         }
+
         failure {
             echo 'Build or deployment failed.'
         }
